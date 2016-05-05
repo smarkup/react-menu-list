@@ -1,9 +1,8 @@
 /* @flow */
 
-import React, {PropTypes} from 'react';
+import React from 'react';
 import {
-  Dropdown, MenuList, MenuItem, MenuListInspector,
-  SubMenuItem
+  Dropdown, MenuList, MenuItem, SubMenuItem
 } from '../src';
 import FloatAnchor from 'react-float-anchor';
 import type {Options as PositionOptions} from 'contain-by-screen';
@@ -14,6 +13,7 @@ type Props = {
   className?: ?string;
   style?: ?Object;
   positionOptions: PositionOptions;
+  autoHighlight: boolean;
   defaultValue: string;
   items: Array<Item>;
 };
@@ -27,17 +27,9 @@ type State = {
 // very generic; you might want to copy this into your application and
 // customize it for your uses and to match your application's styling.
 export default class AutoComplete extends React.Component {
-  static propTypes = {
-    className: PropTypes.string,
-    style: PropTypes.object,
-    positionOptions: PropTypes.object,
-
-    defaultValue: PropTypes.string,
-    items: PropTypes.array.isRequired
-  };
-
   static defaultProps = {
     positionOptions: {position:'bottom', hAlign:'left'},
+    autoHighlight: false,
     defaultValue: ''
   };
 
@@ -73,14 +65,8 @@ export default class AutoComplete extends React.Component {
     this.close();
   }
 
-  componentDidUpdate(prevProps: Props, prevState: State) {
-    if (prevState.value !== this.state.value) {
-      this.refs.floatanchor.reposition();
-    }
-  }
-
   render() {
-    const {className, style, positionOptions, items} = this.props;
+    const {className, style, positionOptions, autoHighlight, items} = this.props;
     const {value, opened} = this.state;
 
     function filterItems(items: Array<Item>): Array<Item> {
@@ -94,37 +80,11 @@ export default class AutoComplete extends React.Component {
       }).filter(Boolean);
     }
 
-    const makeElements = item => (
-      typeof item === 'string' ?
-        <MenuItem
-          highlightedStyle={{background: 'gray'}}
-          onItemChosen={() => this.setState({value: (item: any)})}
-          key={item}
-        >
-          {item}
-        </MenuItem>
-      :
-        <SubMenuItem
-          highlightedStyle={{background: 'gray'}}
-          key={item.title}
-          menu={
-            <Dropdown>
-              <MenuList>
-                {item.items.map(makeElements)}
-              </MenuList>
-            </Dropdown>
-          }
-        >
-          {item.title} ►
-        </SubMenuItem>
-    );
-
     const filteredItems = filterItems(items);
-    const itemElements = filteredItems.map(makeElements);
 
     return (
       <FloatAnchor
-        ref="floatanchor"
+        ref="floatAnchor"
         options={positionOptions}
         anchor={
           <input
@@ -153,17 +113,94 @@ export default class AutoComplete extends React.Component {
         }
         float={
           !(opened && filteredItems.length) ? null :
-            <MenuListInspector
-              onItemChosen={() => this.close()}
-            >
-              <Dropdown>
-                <MenuList>
-                  {itemElements}
-                </MenuList>
-              </Dropdown>
-            </MenuListInspector>
+            <AutoCompleteMenu
+              value={value}
+              autoHighlight={autoHighlight}
+              filteredItems={filteredItems}
+              onValueChosen={value => {
+                this.setState({value});
+                this.close();
+              }}
+              reposition={() => {
+                this.refs.floatAnchor.reposition();
+              }}
+              />
         }
       />
+    );
+  }
+}
+
+type MenuProps = {
+  value: string;
+  autoHighlight: boolean;
+  filteredItems: Array<Item>;
+  onValueChosen: (value: string) => void;
+  reposition: () => void;
+};
+
+// This component is separate so that its componentDidUpdate method gets called
+// at the right time. AutoComplete's componentDidUpdate method may get called
+// before the FloatAnchor's floated elements have been updated.
+class AutoCompleteMenu extends React.Component {
+  props: MenuProps;
+
+  componentDidMount() {
+    if (this.props.autoHighlight && this.refs.firstItem) {
+      this.refs.firstItem.highlight();
+    }
+  }
+
+  componentDidUpdate(prevProps: MenuProps) {
+    if (prevProps.value !== this.props.value) {
+      this.props.reposition();
+
+      if (this.props.autoHighlight && this.refs.firstItem) {
+        this.refs.firstItem.highlight();
+      }
+    }
+  }
+
+  render() {
+    const {filteredItems} = this.props;
+
+    const makeElements = nested => (item, i) => {
+      const ref = !nested && i === 0 ? 'firstItem' : null;
+
+      return typeof item === 'string' ?
+        <MenuItem
+          ref={ref}
+          highlightedStyle={{background: 'gray'}}
+          onItemChosen={() => this.props.onValueChosen((item: any))}
+          key={item}
+        >
+          {item}
+        </MenuItem>
+      :
+        <SubMenuItem
+          ref={ref}
+          highlightedStyle={{background: 'gray'}}
+          key={item.title}
+          menu={
+            <Dropdown>
+              <MenuList>
+                {item.items.map(makeElements(true))}
+              </MenuList>
+            </Dropdown>
+          }
+        >
+          {item.title} ►
+        </SubMenuItem>;
+    };
+
+    const itemElements = filteredItems.map(makeElements(false));
+
+    return (
+      <Dropdown>
+        <MenuList>
+          {itemElements}
+        </MenuList>
+      </Dropdown>
     );
   }
 }
