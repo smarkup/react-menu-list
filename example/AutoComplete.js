@@ -5,7 +5,7 @@ import {
   Dropdown, MenuList, MenuItem, SubMenuItem
 } from '../src';
 import FloatAnchor from 'react-float-anchor';
-import type {Options as PositionOptions} from 'contain-by-screen';
+import type {Options as PositionOptions} from 'react-float-anchor';
 
 type Item = string|{title:string,items:Array<Item>};
 
@@ -33,7 +33,9 @@ export default class AutoComplete extends React.Component {
     defaultValue: ''
   };
 
+  props: Props;
   state: State;
+  _floatAnchor: FloatAnchor;
 
   constructor(props: Props) {
     super(props);
@@ -70,26 +72,26 @@ export default class AutoComplete extends React.Component {
     const {value, opened} = this.state;
 
     function filterItems(items: Array<Item>): Array<Item> {
-      return items.map(item => {
+      return (items.map(item => {
         if (typeof item === 'string') {
-          return item.toLowerCase().startsWith(value.toLowerCase()) ? item : (null:any);
+          return item.toLowerCase().startsWith(value.toLowerCase()) ? item : null;
         } else {
           const subItems = filterItems(item.items);
-          return subItems.length ? {title: item.title, items: subItems} : (null:any);
+          return subItems.length ? {title: item.title, items: subItems} : null;
         }
-      }).filter(Boolean);
+      }).filter(Boolean): any);
+      // any-cast because of https://github.com/facebook/flow/issues/2199
     }
 
     const filteredItems = filterItems(items);
 
     return (
       <FloatAnchor
-        ref="floatAnchor"
+        ref={el => this._floatAnchor = el}
         options={positionOptions}
         anchor={
           <input
             type="text"
-            ref="text"
             className={className}
             style={style}
             value={value}
@@ -122,9 +124,9 @@ export default class AutoComplete extends React.Component {
                 this.close();
               }}
               reposition={() => {
-                this.refs.floatAnchor.reposition();
+                this._floatAnchor.reposition();
               }}
-              />
+            />
         }
       />
     );
@@ -144,10 +146,11 @@ type MenuProps = {
 // before the FloatAnchor's floated elements have been updated.
 class AutoCompleteMenu extends React.Component {
   props: MenuProps;
+  _firstItem: MenuItem|SubMenuItem;
 
   componentDidMount() {
-    if (this.props.autoHighlight && this.refs.firstItem) {
-      this.refs.firstItem.highlight();
+    if (this.props.autoHighlight && this._firstItem) {
+      this._firstItem.highlight();
     }
   }
 
@@ -155,8 +158,8 @@ class AutoCompleteMenu extends React.Component {
     if (prevProps.value !== this.props.value) {
       this.props.reposition();
 
-      if (this.props.autoHighlight && this.refs.firstItem) {
-        this.refs.firstItem.highlight();
+      if (this.props.autoHighlight && this._firstItem) {
+        this._firstItem.highlight();
       }
     }
   }
@@ -165,7 +168,7 @@ class AutoCompleteMenu extends React.Component {
     const {filteredItems} = this.props;
 
     const makeElements = nested => (item, i) => {
-      const ref = !nested && i === 0 ? 'firstItem' : null;
+      const ref = !nested && i === 0 ? (el => this._firstItem = el) : null;
 
       return typeof item === 'string' ?
         <MenuItem
@@ -176,7 +179,7 @@ class AutoCompleteMenu extends React.Component {
         >
           {item}
         </MenuItem>
-      :
+        :
         <SubMenuItem
           ref={ref}
           highlightedStyle={{background: 'gray'}}
