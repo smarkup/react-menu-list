@@ -1,4 +1,5 @@
 /* @flow */
+/* eslint-disable react/prop-types */
 
 import React from 'react';
 import {
@@ -26,15 +27,13 @@ type State = {
 // This is an example autocomplete widget built using the library. It's not
 // very generic; you might want to copy this into your application and
 // customize it for your uses and to match your application's styling.
-export default class AutoComplete extends React.Component {
+export default class AutoComplete extends React.Component<Props, State> {
   static defaultProps = {
     positionOptions: {position:'bottom', hAlign:'left'},
     autoHighlight: false,
     defaultValue: ''
   };
 
-  props: Props;
-  state: State;
   _floatAnchor: FloatAnchor;
 
   constructor(props: Props) {
@@ -72,22 +71,23 @@ export default class AutoComplete extends React.Component {
     const {value, opened} = this.state;
 
     function filterItems(items: Array<Item>): Array<Item> {
-      return (items.map(item => {
+      return items.map(item => {
         if (typeof item === 'string') {
           return item.toLowerCase().startsWith(value.toLowerCase()) ? item : null;
         } else {
           const subItems = filterItems(item.items);
           return subItems.length ? {title: item.title, items: subItems} : null;
         }
-      }).filter(Boolean): any);
-      // any-cast because of https://github.com/facebook/flow/issues/2199
+      }).filter(Boolean);
     }
 
     const filteredItems = filterItems(items);
 
     return (
       <FloatAnchor
-        ref={el => this._floatAnchor = el}
+        ref={el => {
+          if (el) this._floatAnchor = el;
+        }}
         options={positionOptions}
         anchor={
           <input
@@ -144,8 +144,7 @@ type MenuProps = {
 // This component is separate so that its componentDidUpdate method gets called
 // at the right time. AutoComplete's componentDidUpdate method may get called
 // before the FloatAnchor's floated elements have been updated.
-class AutoCompleteMenu extends React.Component {
-  props: MenuProps;
+class AutoCompleteMenu extends React.Component<MenuProps> {
   _firstItem: MenuItem|SubMenuItem;
 
   componentDidMount() {
@@ -167,14 +166,19 @@ class AutoCompleteMenu extends React.Component {
   render() {
     const {filteredItems} = this.props;
 
-    const makeElements = nested => (item, i) => {
-      const ref = !nested && i === 0 ? (el => this._firstItem = el) : null;
+    const makeElements = nested => (_item, i) => {
+      const item = _item; // needed so Flow knows the variable can't have its type change
+      const ref = !nested && i === 0 ?
+        (el => {
+          if (el) this._firstItem = el;
+        })
+        : null;
 
       return typeof item === 'string' ?
         <MenuItem
           ref={ref}
           highlightedStyle={{background: 'gray'}}
-          onItemChosen={() => this.props.onValueChosen((item: any))}
+          onItemChosen={() => this.props.onValueChosen(item)}
           key={item}
         >
           {item}
@@ -200,9 +204,19 @@ class AutoCompleteMenu extends React.Component {
 
     return (
       <Dropdown>
-        <MenuList>
-          {itemElements}
-        </MenuList>
+        <div
+          onMouseDown={e => {
+            // Block focus from being switched out of the AutoComplete textbox.
+            // If you need an AutoComplete-like component that keeps its
+            // dropdown open after the textbox loses focus, then look at the
+            // changes made to MenuButton in commit 47a698a3cd59.
+            e.preventDefault();
+          }}
+        >
+          <MenuList>
+            {itemElements}
+          </MenuList>
+        </div>
       </Dropdown>
     );
   }
