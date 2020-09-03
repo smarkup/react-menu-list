@@ -98,7 +98,7 @@ export class Dropdown extends React.Component<{}> {
 
 // MenuButton
 
-export type MenuButtonProps = {
+export type MenuButtonProps<T = {}> = {
   className?: string;
   style?: Object;
   disabled?: boolean;
@@ -109,8 +109,8 @@ export type MenuButtonProps = {
   positionOptions?: FloatAnchorOptions;
   menuZIndex?: string|number;
   menuParentElement?: HTMLElement;
-  ButtonComponent?: React.ComponentType<{domRef: Ref<HTMLElement>}>;
-  buttonProps?: object;
+  ButtonComponent?: React.ComponentType<{domRef: Ref<HTMLElement>} & T>;
+  buttonProps?: T;
 
   children?: ReactNode;
   menu: ReactNode;
@@ -118,7 +118,7 @@ export type MenuButtonProps = {
   onDidOpen?: () => void;
   onWillClose?: () => void;
 };
-export class MenuButton extends React.Component<MenuButtonProps> {
+export class MenuButton<T> extends React.Component<MenuButtonProps<T>> {
   open(): Promise<void>;
   close(): void;
   toggle(): void;
