@@ -197,6 +197,7 @@ export default class MenuItem extends React.Component<Props, State> {
         ref={this._elSetter}
         style={style}
         className={className}
+        onMouseDown={e => e.preventDefault()}
         onClick={() => this._menuListHandle.itemChosen()}
         onMouseEnter={() => this.highlight(false)}
         onMouseLeave={onMouseLeave || (() => this.unhighlight())}
