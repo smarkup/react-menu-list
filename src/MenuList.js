@@ -250,8 +250,9 @@ export default class MenuList extends React.Component<Props> {
   }
 
   componentDidMount() {
-    const isEnterOrArrowKey = e =>
-      e.which === 13 || (37 <= e.which && e.which <= 40);
+    const isEnterOrSpaceOrArrowKey = e =>
+      e.which === 13 || e.which === 32 || (37 <= e.which && e.which <= 40);
+
     const el = this._elRef.current;
     /*:: if (!el) throw new Error(); */
 
@@ -260,10 +261,10 @@ export default class MenuList extends React.Component<Props> {
     // which selectively stops propagation on key events for example.
     Kefir.merge([
       Kefir.fromEvents(window, 'keydown')
-        .filter(isEnterOrArrowKey)
+        .filter(isEnterOrSpaceOrArrowKey)
         .filter(e => el.contains(e.target)),
       fromEventsCapture(window, 'keydown')
-        .filter(isEnterOrArrowKey)
+        .filter(isEnterOrSpaceOrArrowKey)
         .filter(e => !el.contains(e.target)),
     ])
       .takeUntilBy(this._stopper)
@@ -384,6 +385,7 @@ export default class MenuList extends React.Component<Props> {
 
     switch (event.which) {
       case 13: //enter
+      case 32: //space
         if (visibleHighlightedIndex != null) {
           mEvent = new ChosenEvent('chosen', true);
           event.preventDefault();
