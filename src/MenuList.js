@@ -371,6 +371,9 @@ export default class MenuList extends React.Component<Props> {
   }
 
   _key(event: KeyboardEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+
     if (this._keyboardTakenByIndex != null || this._listItems.length === 0) {
       return;
     }
@@ -388,8 +391,6 @@ export default class MenuList extends React.Component<Props> {
       case 32: //space
         if (visibleHighlightedIndex != null) {
           mEvent = new ChosenEvent('chosen', true);
-          event.preventDefault();
-          event.stopPropagation();
         }
         break;
       case 37: //left
@@ -403,13 +404,9 @@ export default class MenuList extends React.Component<Props> {
         }
         break;
       case 38: //up
-        event.preventDefault();
-        event.stopPropagation();
         this.moveCursor('up');
         break;
       case 40: //down
-        event.preventDefault();
-        event.stopPropagation();
         this.moveCursor('down');
         break;
     }
