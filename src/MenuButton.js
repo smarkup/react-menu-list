@@ -134,11 +134,7 @@ export default class MenuButton extends React.Component<Props, State> {
     floatAnchor.reposition();
   }
 
-  _onMouseDown = (e: MouseEvent) => {
-    if (e.button !== 0) {
-      return;
-    }
-
+  _onMouseDown = () => {
     this.toggle();
   };
 
