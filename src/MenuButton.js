@@ -98,6 +98,7 @@ export default class MenuButton extends React.Component<Props, State> {
           e.preventDefault();
           e.stopPropagation();
         }),
+      Kefir.fromEvents(window, 'blur'),
     ])
       .takeUntilBy(this._onClose)
       .onValue(() => {
