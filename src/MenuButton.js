@@ -22,6 +22,8 @@ type RenderProp = (
   onMouseDown: (e: MouseEvent) => void
 ) => React.Node;
 export type Props = {
+  type?: 'normal' | 'context',
+
   positionOptions: FloatAnchorOptions,
   menuZIndex?: string | number,
   menuParentElement?: HTMLElement,
@@ -44,6 +46,8 @@ export type Props = {
 
 export default class MenuButton extends React.Component<Props, State> {
   static propTypes = {
+    type: PropTypes.string,
+
     positionOptions: PropTypes.object,
     menuZIndex: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 
@@ -64,6 +68,7 @@ export default class MenuButton extends React.Component<Props, State> {
   };
 
   static defaultProps = {
+    type: 'normal',
     positionOptions: {position: 'bottom', hAlign: 'left'},
   };
 
@@ -134,19 +139,47 @@ export default class MenuButton extends React.Component<Props, State> {
     floatAnchor.reposition();
   }
 
-  _onMouseDown = () => {
-    this.toggle();
-  };
+  _onContextMenu = (e: MouseEvent) => {
+    if (this.props.disabled) return;
 
-  _onKeyPress = (e: KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (this.props.type === 'context') {
+      e.preventDefault();
+
       this.toggle();
     }
   };
 
-  _setRef(el: HTMLElement | null, anchorRef: React.Ref<any>) {
+  _onMouseDown = (e: MouseEvent) => {
+    if (this.props.disabled) return;
+
+    if (e.button !== 0) {
+      return;
+    }
+
+    if (this.props.type === 'normal') {
+      e.preventDefault();
+
+      this.toggle();
+    }
+  };
+
+  _onKeyPress = (e: KeyboardEvent) => {
+    if (this.props.disabled) return;
+
+    if (this.props.type === 'normal') {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.toggle();
+      }
+    }
+  };
+
+  _setRef(el: HTMLElement | null, anchorRef: React.Ref<any> | null) {
     this._anchorRef = el;
-    setRef(anchorRef, el);
+
+    if (anchorRef) {
+      setRef(anchorRef, el);
+    }
   }
 
   _itemChosen() {
@@ -157,7 +190,8 @@ export default class MenuButton extends React.Component<Props, State> {
     domRef: React.Ref<any>,
     opened: boolean,
     onKeyPress: (e: KeyboardEvent) => void,
-    onMouseDown: (e: MouseEvent) => void
+    onMouseDown: (e: MouseEvent) => void,
+    onContextMenu: (e: MouseEvent) => void
   ) => {
     const {openedStyle, openedClassName} = this.props;
     let {style, className} = this.props;
@@ -171,19 +205,20 @@ export default class MenuButton extends React.Component<Props, State> {
     }
 
     return (
-      <button
-        className={className}
-        style={style}
-        ref={domRef}
-        aria-haspopup={true}
-        aria-expanded={opened}
-        onKeyPress={onKeyPress}
-        onMouseDown={onMouseDown}
-        disabled={this.props.disabled}
-        title={this.props.title}
-      >
-        {this.props.children}
-      </button>
+      <>
+        <div
+          className={className}
+          style={style}
+          ref={domRef}
+          aria-haspopup={true}
+          aria-expanded={opened}
+          onKeyPress={onKeyPress}
+          onContextMenu={onContextMenu}
+          onMouseDown={onMouseDown}
+        >
+          {this.props.children}
+        </div>
+      </>
     );
   };
 
@@ -192,7 +227,7 @@ export default class MenuButton extends React.Component<Props, State> {
   }
 
   render() {
-    const {menu, positionOptions, menuZIndex} = this.props;
+    const {type, menu, positionOptions, menuZIndex} = this.props;
     const {opened} = this.state;
 
     const renderButton = this.props.renderButton || this._defaultRenderButton;
@@ -208,7 +243,9 @@ export default class MenuButton extends React.Component<Props, State> {
             el => this._setRef(el, anchorRef),
             opened,
             this._onKeyPress,
-            this._onMouseDown
+            this._onMouseDown,
+            this._onContextMenu,
+            type
           )
         }
         float={

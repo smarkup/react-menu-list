@@ -112,6 +112,8 @@ type RenderProp = (
 ) => ReactNode;
 
 export type MenuButtonProps = {
+  type?: 'normal' | 'context';
+
   className?: string;
   style?: Object;
   disabled?: boolean;
