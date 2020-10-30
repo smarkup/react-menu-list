@@ -250,22 +250,22 @@ export default class MenuList extends React.Component<Props> {
   }
 
   componentDidMount() {
-    const isEnterOrSpaceOrArrowKey = e =>
-      e.which === 13 || e.which === 32 || (37 <= e.which && e.which <= 40);
-
-    const el = this._elRef.current;
+    // const isEnterOrSpaceOrArrowKey = e =>
+    //   e.which === 13 || e.which === 32 || (37 <= e.which && e.which <= 40);
+    //
+    // const el = this._elRef.current;
     /*:: if (!el) throw new Error(); */
 
     // The only things that should receive keydown/keypress events before us
     // are our children. This allows a MenuItem to contain a text input
     // which selectively stops propagation on key events for example.
     Kefir.merge([
-      Kefir.fromEvents(window, 'keydown')
-        .filter(isEnterOrSpaceOrArrowKey)
-        .filter(e => el.contains(e.target)),
-      fromEventsCapture(window, 'keydown')
-        .filter(isEnterOrSpaceOrArrowKey)
-        .filter(e => !el.contains(e.target)),
+      // Kefir.fromEvents(window, 'keydown')
+      //   .filter(isEnterOrSpaceOrArrowKey)
+      //   .filter(e => el.contains(e.target)),
+      fromEventsCapture(window, 'keydown'),
+      // .filter(isEnterOrSpaceOrArrowKey)
+      // .filter(e => !el.contains(e.target)),
     ])
       .takeUntilBy(this._stopper)
       .onValue(event => this._key(event));

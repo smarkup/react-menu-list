@@ -15,7 +15,8 @@ type State = {
 
 type TriggerProps = {
   positionOptions: string,
-  renderButton: React.Element,
+  children?: React.ReactElement,
+  renderButton?: (opened: boolean) => React.ReactElement,
   opened: boolean,
   onKeyPress: (e: KeyboardEvent) => void,
   onMouseDown: (e: MouseEvent) => void,
@@ -23,29 +24,32 @@ type TriggerProps = {
   menu: React.Element,
   popperElement: any,
   setPopperElement: (el: any) => void,
+  bgRef: (el: any) => void,
+  style: any,
+  menuZIndex?: number,
 };
 
 export type Props = {
   type?: 'normal' | 'context',
 
-  positionOptions: string, // popper option
-
-  renderButton: React.ReactElement,
-
   children?: React.ReactElement,
-  disabled?: boolean,
-
+  renderButton?: (opened: boolean) => React.ReactElement,
   menu: React.ReactElement,
+
   onWillOpen?: () => void,
   onDidOpen?: () => void,
   onWillClose?: () => void,
   onDidClose?: () => void,
+
+  disabled?: boolean,
+  positionOptions?: string, // popper option
+  style: any,
+  menuZIndex?: number,
 };
 
 export default class MenuButton extends React.Component<Props, State> {
   static defaultProps = {
     type: 'normal',
-    positionOptions: {position: 'bottom', hAlign: 'left'},
   };
 
   state: State = {
@@ -54,6 +58,7 @@ export default class MenuButton extends React.Component<Props, State> {
   };
 
   _onClose: Bus<void> = kefirBus();
+  _bgRef = React.createRef<HTMLElement>();
 
   open = (): Promise<void> => {
     if (this.state.opened) return Promise.resolve();
@@ -70,18 +75,23 @@ export default class MenuButton extends React.Component<Props, State> {
 
         if (e.target.nodeType !== 1) return true; // not an element
 
+        if (e.target === this._bgRef.current) {
+          e.preventDefault(); // it messes with focus
+          return true;
+        }
+
         const popper = this.state.popperEl;
-
-        if (!popper) throw new Error('missing popper element');
-
         return !popper.contains(e.target);
       }),
-      Kefir.fromEvents(window, 'keydown')
-        .filter(e => (e.key ? e.key === 'Escape' : e.which === 27))
-        .map(e => {
+      fromEventsCapture(window, 'keydown').filter(e => {
+        if (e.key === 'Escape') {
           e.preventDefault();
           e.stopPropagation();
-        }),
+          return true;
+        } else {
+          return false;
+        }
+      }),
       Kefir.fromEvents(window, 'blur'),
     ])
       .takeUntilBy(this._onClose)
@@ -99,11 +109,15 @@ export default class MenuButton extends React.Component<Props, State> {
 
   close = () => {
     if (!this.state.opened) return;
+
+    this._bgRef.current = undefined;
+    this._onClose.emit();
+
     if (this.props.onWillClose) this.props.onWillClose();
+
     this.setState({opened: false, popperEl: undefined}, () => {
       if (this.props.onDidClose) this.props.onDidClose();
     });
-    this._onClose.emit();
   };
 
   toggle = () => {
@@ -119,37 +133,29 @@ export default class MenuButton extends React.Component<Props, State> {
   };
 
   _onContextMenu = (e: MouseEvent) => {
-    if (this.props.disabled) return;
+    if (this.props.disabled || this.props.type !== 'context') return;
 
-    if (this.props.type === 'context') {
-      e.preventDefault();
-
-      this.toggle();
-    }
+    e.preventDefault();
+    e.stopPropagation();
+    this.toggle();
   };
 
   _onMouseDown = (e: MouseEvent) => {
-    if (this.props.disabled) return;
+    if (this.props.disabled || this.props.type !== 'normal') return;
 
-    if (e.button !== 0) {
-      return;
-    }
-
-    if (this.props.type === 'normal') {
+    if (e.button === 0) {
       e.preventDefault();
-
+      e.stopPropagation();
       this.toggle();
     }
   };
 
   _onKeyPress = (e: KeyboardEvent) => {
-    if (this.props.disabled) return;
+    if (this.props.disabled || this.props.type !== 'normal') return;
 
-    if (this.props.type === 'normal') {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        this.toggle();
-      }
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      this.toggle();
     }
   };
 
@@ -162,52 +168,48 @@ export default class MenuButton extends React.Component<Props, State> {
   };
 
   render() {
-    const {menu, positionOptions, children} = this.props;
+    const {
+      menu,
+      positionOptions,
+      children,
+      renderButton,
+      style,
+      menuZIndex,
+    } = this.props;
     const {opened} = this.state;
 
-    if (this.props.type === 'normal') {
-      return (
-        <TriggerNormal
-          positionOptions={positionOptions}
-          renderButton={children}
-          opened={opened}
-          onKeyPress={this._onKeyPress}
-          onMouseDown={this._onMouseDown}
-          onContextMenu={this._onContextMenu}
-          menu={
-            <MenuListInspector onItemChosen={this.close}>
-              {menu}
-            </MenuListInspector>
-          }
-          setPopperElement={this.setPopperEl}
-          popperElement={this.state.popperEl}
-        />
-      );
-    } else {
-      return (
-        <TriggerContext
-          positionOptions={positionOptions}
-          renderButton={children}
-          opened={opened}
-          onKeyPress={this._onKeyPress}
-          onMouseDown={this._onMouseDown}
-          onContextMenu={this._onContextMenu}
-          menu={
-            <MenuListInspector onItemChosen={this.close}>
-              {menu}
-            </MenuListInspector>
-          }
-          setPopperElement={this.setPopperEl}
-          popperElement={this.state.popperEl}
-        />
-      );
-    }
+    const TriggerImpl =
+      this.props.type === 'normal' ? TriggerNormal : TriggerContext;
+
+    return (
+      <TriggerImpl
+        positionOptions={positionOptions}
+        renderButton={renderButton}
+        opened={opened}
+        onKeyPress={this._onKeyPress}
+        onMouseDown={this._onMouseDown}
+        onContextMenu={this._onContextMenu}
+        menu={
+          <MenuListInspector onItemChosen={this.close}>
+            {menu}
+          </MenuListInspector>
+        }
+        setPopperElement={this.setPopperEl}
+        popperElement={this.state.popperEl}
+        style={style}
+        menuZIndex={menuZIndex}
+        bgRef={this._bgRef}
+      >
+        {children}
+      </TriggerImpl>
+    );
   }
 }
 
 const TriggerNormal = ({
   positionOptions,
   renderButton,
+  children,
   opened,
   onKeyPress,
   onMouseDown,
@@ -215,6 +217,9 @@ const TriggerNormal = ({
   menu,
   popperElement,
   setPopperElement,
+  style,
+  menuZIndex,
+  bgRef,
 }: TriggerProps) => {
   const [referenceElement, setReferenceElement] = React.useState(null);
   const {styles, attributes} = usePopper(
@@ -230,17 +235,17 @@ const TriggerNormal = ({
         onKeyPress={onKeyPress}
         onMouseDown={onMouseDown}
         onContextMenu={onContextMenu}
+        style={style}
       >
-        {renderButton}
+        {renderButton ? renderButton(opened) : children}
       </div>
-
-      <Bg active={opened} />
 
       {opened ? (
         <Portal>
+          <Bg zIndex={menuZIndex} setRef={bgRef} />
           <div
             ref={setPopperElement}
-            style={styles.popper}
+            style={{...styles.popper, zIndex: menuZIndex}}
             {...attributes.popper}
           >
             {menu}
@@ -254,6 +259,7 @@ const TriggerNormal = ({
 const TriggerContext = ({
   positionOptions,
   renderButton,
+  children,
   opened,
   onKeyPress,
   onMouseDown,
@@ -261,6 +267,9 @@ const TriggerContext = ({
   menu,
   popperElement,
   setPopperElement,
+  style,
+  menuZIndex,
+  bgRef,
 }: TriggerProps) => {
   const {styles, attributes, update} = usePopper(
     virtualElement,
@@ -285,17 +294,17 @@ const TriggerContext = ({
 
           onContextMenu(e);
         }}
+        style={style}
       >
-        {renderButton}
+        {renderButton ? renderButton(opened) : children}
       </div>
-
-      <Bg active={opened} />
 
       {opened ? (
         <Portal>
+          <Bg zIndex={menuZIndex} setRef={bgRef} />
           <div
             ref={setPopperElement}
-            style={styles.popper}
+            style={{...styles.popper, zIndex: menuZIndex}}
             {...attributes.popper}
           >
             {menu}
@@ -330,15 +339,17 @@ const virtualElement = {
   getBoundingClientRect: generateGetBoundingClientRect(),
 };
 
-const Bg = ({active}: {active: boolean}) => (
+const Bg = ({setRef, zIndex}: {zIndex?: number, setRef: any}) => (
   <div
+    ref={setRef}
     style={{
-      display: active ? 'block' : 'none',
       position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
       bottom: 0,
+      zIndex,
+      background: 'rgba(255,255,255,0.01)', // mitigate cursor flickering/jumping
     }}
   />
 );

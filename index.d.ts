@@ -106,13 +106,20 @@ export class Dropdown extends React.Component<{}> {}
 
 export type MenuButtonProps = {
   type?: 'normal' | 'context';
-  positionOptions: string; // popper option
+
   children?: React.ReactElement;
+  renderButton?: (opened: boolean) => React.ReactElement;
   menu: React.ReactElement;
+
   onWillOpen?: () => void;
   onDidOpen?: () => void;
   onWillClose?: () => void;
   onDidClose?: () => void;
+
+  disabled?: boolean;
+  positionOptions?: string; // popper option
+  style: any;
+  menuZIndex?: number;
 };
 export class MenuButton extends React.Component<MenuButtonProps> {
   open(): Promise<void>;
