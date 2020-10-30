@@ -218,6 +218,7 @@ export default class MenuButton extends React.Component<Props, State> {
         >
           {this.props.children}
         </div>
+        <Bg active={opened} />
       </>
     );
   };
@@ -259,3 +260,16 @@ export default class MenuButton extends React.Component<Props, State> {
     );
   }
 }
+
+const Bg = ({active}: {active: boolean}) => (
+  <div
+    style={{
+      display: active ? 'block' : 'none',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+    }}
+  />
+);
