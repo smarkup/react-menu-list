@@ -104,34 +104,15 @@ export class Dropdown extends React.Component<{}> {}
 
 // MenuButton
 
-type RenderProp = (
-  domRef: React.Ref<any>,
-  opened: boolean,
-  onKeyPress: (e: React.KeyboardEvent) => void,
-  onMouseDown: (e: React.MouseEvent) => void
-) => ReactNode;
-
 export type MenuButtonProps = {
   type?: 'normal' | 'context';
-
-  className?: string;
-  style?: Object;
-  disabled?: boolean;
-  title?: string;
-  openedClassName?: string;
-  openedStyle?: Object;
-  children?: ReactNode;
-
-  renderButton?: RenderProp;
-
-  positionOptions?: FloatAnchorOptions;
-  menuZIndex?: string | number;
-  menuParentElement?: HTMLElement;
-
-  menu: ReactNode;
+  positionOptions: string; // popper option
+  children?: React.ReactElement;
+  menu: React.ReactElement;
   onWillOpen?: () => void;
   onDidOpen?: () => void;
   onWillClose?: () => void;
+  onDidClose?: () => void;
 };
 export class MenuButton extends React.Component<MenuButtonProps> {
   open(): Promise<void>;
