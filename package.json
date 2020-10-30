@@ -1,6 +1,6 @@
 {
   "name": "react-menu-list",
-  "version": "7.0.1",
+  "version": "8.0.0-alpha",
   "description": "React component for menu lists and submenus",
   "main": "js/index.js",
   "sideEffects": false,
@@ -68,15 +68,18 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.0.0",
+    "@popperjs/core": "^2.5.3",
     "array-find-index": "1.0.2",
     "kefir": "^3.5.1",
     "kefir-bus": "^2.2.0",
     "kefir-stopper": "^2.1.0",
     "prop-types": "^15.6.0",
-    "react-float-anchor": "^3.2.0"
+    "react-float-anchor": "^3.2.0",
+    "react-popper": "^2.2.3"
   },
   "peerDependencies": {
-    "react": "^16.6.0"
+    "react": "^16.6.0",
+    "react-dom": "^16.6.0"
   },
   "husky": {
     "hooks": {
