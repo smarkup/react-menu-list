@@ -23,6 +23,10 @@ export interface MenuEvent {
 
 export interface ChosenEvent extends MenuEvent {
   byKeyboard: boolean;
+  withMeta: boolean;
+  withAlt: boolean;
+  withCtrl: boolean;
+  withShift: boolean;
 }
 
 // MenuList
