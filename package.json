@@ -1,11 +1,11 @@
 {
   "name": "react-menu-list",
-  "version": "8.0.0",
+  "version": "8.1.0",
   "description": "React component for menu lists and submenus",
   "main": "js/index.js",
   "sideEffects": false,
   "scripts": {
-    "--build": "rimraf js && babel -s inline -d js/ src/ --ignore '**/*.test.js' && flow-copy-source -v src js --ignore '**/*.test.*'",
+    "build": "rimraf js && babel -s inline -d js/ src/ --ignore '**/*.test.js' && flow-copy-source -v src js --ignore '**/*.test.*'",
     "example-build": "cross-env NODE_ENV=development browserify -t babelify -do example/bundle.js example/main.js",
     "example-watch": "cross-env NODE_ENV=development watchify -v -t babelify -do example/bundle.js example/main.js",
     "example-build-prod": "cross-env NODE_ENV=production browserify -t babelify -do example/bundle.js example/main.js",
