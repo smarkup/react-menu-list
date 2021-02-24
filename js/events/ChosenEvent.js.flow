@@ -9,6 +9,7 @@ export default class ChosenEvent extends MenuEvent {
   withAlt: boolean;
   withCtrl: boolean;
   withShift: boolean;
+  button: ?number;
 
   constructor(
     type: string,
@@ -18,6 +19,7 @@ export default class ChosenEvent extends MenuEvent {
       withAlt: boolean,
       withCtrl: boolean,
       withShift: boolean,
+      button: boolean,
     |}
   ) {
     super(type);
@@ -27,5 +29,6 @@ export default class ChosenEvent extends MenuEvent {
     this.withAlt = modifiers.withAlt;
     this.withCtrl = modifiers.withCtrl;
     this.withShift = modifiers.withShift;
+    this.button = modifiers.button;
   }
 }

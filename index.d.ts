@@ -27,6 +27,7 @@ export interface ChosenEvent extends MenuEvent {
   withAlt: boolean;
   withCtrl: boolean;
   withShift: boolean;
+  button?: number;
 }
 
 // MenuList

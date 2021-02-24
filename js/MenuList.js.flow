@@ -25,6 +25,7 @@ export type MenuListHandle = {
     withAlt: boolean,
     withCtrl: boolean,
     withShift: boolean,
+    button: ?number,
   |}): void,
   takeKeyboard(): void,
   releaseKeyboard(): void,
@@ -154,12 +155,7 @@ export default class MenuList extends React.Component<Props> {
             this._naturalHighlight(null, false);
           }
         },
-        itemChosen: (modifiers: {|
-          withMeta: boolean,
-          withAlt: boolean,
-          withCtrl: boolean,
-          withShift: boolean,
-        |}) => {
+        itemChosen: modifiers => {
           this._dispatchEvent(
             control,
             new ChosenEvent('chosen', false, modifiers)
