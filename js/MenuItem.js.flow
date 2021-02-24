@@ -205,6 +205,7 @@ export default class MenuItem extends React.Component<Props, State> {
             withMeta: e.metaKey,
             withCtrl: e.ctrlKey,
             withAlt: e.altKey,
+            button: e.button,
           })
         }
         onAuxClick={
@@ -215,6 +216,7 @@ export default class MenuItem extends React.Component<Props, State> {
                   withMeta: e.metaKey,
                   withCtrl: e.ctrlKey,
                   withAlt: e.altKey,
+                  button: e.button,
                 });
               }
             : undefined
