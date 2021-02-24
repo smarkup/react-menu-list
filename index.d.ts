@@ -64,6 +64,7 @@ export type MenuItemProps = {
 
   index?: number;
   onMouseLeave?: (event: MouseEvent) => void;
+  behaviour?: 'desktop' | 'web';
 
   children?: ReactNode;
 
