@@ -35,7 +35,6 @@ export type Props = {
 
   index?: number,
   onMouseLeave?: (event: MouseEvent) => void,
-  behaviour?: 'desktop' | 'web',
 
   children?: ReactNode,
 
@@ -179,7 +178,7 @@ export default class MenuItem extends React.Component<Props, State> {
   }
 
   render() {
-    const {children, onMouseLeave, behaviour = 'web'} = this.props;
+    const {children, onMouseLeave} = this.props;
     const {highlighted} = this.state;
 
     let style = this.props.style;
@@ -208,26 +207,16 @@ export default class MenuItem extends React.Component<Props, State> {
             button: e.button,
           })
         }
-        onAuxClick={
-          behaviour === 'desktop'
-            ? e => {
-                this._menuListHandle.itemChosen({
-                  withShift: e.shiftKey,
-                  withMeta: e.metaKey,
-                  withCtrl: e.ctrlKey,
-                  withAlt: e.altKey,
-                  button: e.button,
-                });
-              }
-            : undefined
-        }
-        onContextMenu={
-          behaviour === 'desktop'
-            ? e => {
-                e.preventDefault(); // handled in onAuxClick
-              }
-            : undefined
-        }
+        onAuxClick={e => {
+          this._menuListHandle.itemChosen({
+            withShift: e.shiftKey,
+            withMeta: e.metaKey,
+            withCtrl: e.ctrlKey,
+            withAlt: e.altKey,
+            button: e.button,
+          });
+        }}
+        onContextMenu={e => e.preventDefault()}
         onMouseEnter={() => this.highlight(false)}
         onMouseLeave={onMouseLeave || (() => this.unhighlight())}
         role="menuitem"
